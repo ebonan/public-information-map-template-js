@@ -23,7 +23,9 @@ define([
     "esri/dijit/OverviewMap",
     "dijit/registry",
     "dojo/_base/array",
-    "esri/lang"
+    "esri/lang",
+    // modifications
+    "esri/urlUtils"
 ],
 function(
     declare,
@@ -45,7 +47,8 @@ function(
     OverviewMap,
     registry,
     array,
-    esriLang
+    esriLang,
+    urlUtils
 ) {
     return declare("", [About, SocialLayers], {
         config: {},
@@ -407,7 +410,7 @@ function(
                         style: "width: 375px"
                     });
                     dialogModal.show();
-                }));    
+                }));
             }
 
             // swipe layer
@@ -439,6 +442,21 @@ function(
             }
             // drawer size check
             this._drawer.resize();
+            // MODIFICATIONS
+            // check URL for address search params
+            var params = urlUtils.urlToObject(document.location.href);
+            if (params.query && params.query.address) {
+              var address = params.query.address;
+              // You could also set the value of the geocoder input box
+              // or just set the value, your preference
+              //this._geocoder.inputNode.value = address;
+              this._geocoder.value = address;
+              this._geocoder.find().then(lang.hitch(this, function(response) {
+                if (response.results.length) {
+                  this._geocoder.select(response.results[0]);
+                }
+              }));
+            }
         },
         _getOverviewMapSize: function(){
             var breakPoint = 500;
@@ -453,7 +471,7 @@ function(
                 var size = this._getOverviewMapSize();
                 if(this._overviewMap.hasOwnProperty('resize')){
                     this._overviewMap.resize({ w:size, h:size });    
-                }                
+                }
             }
         },
         _checkMobileGeocoderVisibility: function () {
